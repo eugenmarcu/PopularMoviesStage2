@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    style="@style/style_wmp_hwc">
+
+    <LinearLayout style="@style/style_wmp_hwc"
+        android:gravity="center_vertical">
+
+        <ImageView
+            android:background="@android:color/holo_orange_light"
+            android:src="@drawable/ic_video_library_black_24dp"
+            style="@style/style_wwc_hwc" />
+
+        <TextView
+            android:id="@+id/trailers_name_tv"
+            android:textColor="@android:color/holo_orange_light"
+            tools:text="Trailer 1"
+            android:padding="8dp"
+            style="@style/style_wwc_hwc" />
+
+    </LinearLayout>
+
+</LinearLayout>

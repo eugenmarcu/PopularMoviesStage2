@@ -1,0 +1,21 @@
+<resources>
+    <string name="app_name">Popular Movies stage 2</string>
+    <string name="most_popular">Most popular</string>
+    <string name="higher_rated">Higher rated</string>
+    <string name="no_internet">No internet connection.</string>
+    <string name="no_movies_found">No movies found!</string>
+    <string name="release_date">Release date</string>
+    <string name="average_vote">Average vote</string>
+    <string name="plot">Plot</string>
+    <string name="movie_image_description">Movie image</string>
+    <string name="no_reviews_found">No reviews found!</string>
+    <string name="reviews">Reviews</string>
+    <string name="no_trailers_found">No trailers found!</string>
+    <string name="trailers">Trailers</string>
+    <string name="favorites">Favorites</string>
+    <string name="settings">Settings</string>
+    <string name="no_favorites_found">No favorites found!</string>
+    <string name="removed_favorites">Removed from favorites</string>
+    <string name="added_favorites">Added to favorites</string>
+</resources>
+

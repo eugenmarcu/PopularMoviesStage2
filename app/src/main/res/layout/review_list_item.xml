@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:orientation="vertical"
+    style="@style/style_wmp_hwc">
+
+    <TextView
+        android:id="@+id/reviews_author_tv"
+        android:textColor="@android:color/darker_gray"
+        tools:text="Author name"
+        style="@style/style_wmp_hwc" />
+
+    <TextView
+        android:id="@+id/reviews_content_tv"
+        android:textColor="@android:color/holo_orange_light"
+        tools:text="asfkjafkj askj fkjas fkja skjf askj fkja kf asjk jk"
+        style="@style/style_wmp_hwc" />
+
+</LinearLayout>

@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@android:color/black">
+
+    <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:orientation="vertical"
+        android:padding="8dp"
+        tools:context=".DetailsActivity"
+        style="@style/style_wmp_hwc">
+
+        <TextView
+            android:id="@+id/tv_title"
+            android:layout_gravity="center_horizontal"
+            android:gravity="center"
+            android:padding="8dp"
+            android:textAppearance="@style/Base.TextAppearance.AppCompat.Large"
+            android:textColor="@android:color/holo_orange_dark"
+            tools:text="Movie Title"
+            style="@style/style_wmp_hwc" />
+
+        <LinearLayout style="@style/style_wmp_hwc">
+
+            <ImageView
+                android:id="@+id/iv_poster"
+                android:layout_width="250dp"
+                android:layout_height="375dp"
+                app:srcCompat="@drawable/ff" />
+
+            <LinearLayout
+                android:orientation="vertical"
+                android:padding="8dp"
+                style="@style/style_wwc_hwc">
+
+                <TextView
+                    android:text="@string/release_date"
+                    android:textColor="@android:color/holo_orange_dark"
+                    style="@style/style_wwc_hwc" />
+
+                <TextView
+                    android:id="@+id/tv_release_date"
+                    android:textAppearance="@style/Base.TextAppearance.AppCompat.Medium"
+                    android:textColor="@android:color/darker_gray"
+                    tools:text="12/12/2018"
+                    style="@style/style_wwc_hwc" />
+
+                <TextView
+                    android:id="@+id/textView4"
+                    android:text="@string/average_vote"
+                    android:textColor="@android:color/holo_orange_dark"
+                    style="@style/style_wwc_hwc" />
+
+                <TextView
+                    android:id="@+id/tv_average_vote"
+                    android:textAppearance="@style/Base.TextAppearance.AppCompat.Medium"
+                    android:textColor="@android:color/darker_gray"
+                    tools:text="8.7"
+                    style="@style/style_wwc_hwc" />
+
+                <ImageButton
+                    android:id="@+id/btn_mark_as_favorite"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:layout_gravity="center"
+                    android:background="@android:color/holo_orange_dark"
+                    android:src="@drawable/ic_favorite_border_black_24dp"
+                    android:padding="10dp"/>
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <!-- Plot -->
+        <TextView
+            android:id="@+id/textView6"
+            android:padding="8dp"
+            android:text="@string/plot"
+            android:textColor="@android:color/holo_orange_dark"
+            style="@style/style_wwc_hwc" />
+
+        <TextView
+            android:id="@+id/tv_plot"
+            android:textColor="@android:color/darker_gray"
+            tools:text="Bla bla b df d ss dg sd gs dg sd g dskghfdj kdfj gkjfd jg jfdk gk fdkjg kdjf gkj fdkg kj fkjg kjfd gkjfd gkjfd kjg jfdk gkjd"
+            style="@style/style_wwc_hwc" />
+
+        <!--Trailers-->
+        <LinearLayout
+            android:orientation="vertical"
+            style="@style/style_wmp_hwc">
+
+            <TextView
+                android:textColor="@android:color/holo_orange_dark"
+                android:text="@string/trailers"
+                style="@style/style_wmp_hwc" />
+
+            <android.support.v7.widget.RecyclerView
+                android:id="@+id/trailer_list"
+                android:padding="10dp"
+                style="@style/style_wmp_hwc" />
+
+            <TextView
+                android:id="@+id/trailer_empty_tv"
+                android:text="@string/no_trailers_found"
+                style="@style/style_empty_tv" />
+
+        </LinearLayout>
+
+        <!--Reviews-->
+        <LinearLayout
+            android:orientation="vertical"
+            style="@style/style_wmp_hwc">
+
+            <TextView
+                android:textColor="@android:color/holo_orange_dark"
+                android:text="@string/reviews"
+                style="@style/style_wwc_hwc" />
+
+            <android.support.v7.widget.RecyclerView
+                android:id="@+id/reviews_list"
+                android:padding="10dp"
+                style="@style/style_wmp_hwc" />
+
+            <TextView
+                android:id="@+id/reviews_empty_tv"
+                android:text="@string/no_reviews_found"
+                style="@style/style_empty_tv" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+</ScrollView>
