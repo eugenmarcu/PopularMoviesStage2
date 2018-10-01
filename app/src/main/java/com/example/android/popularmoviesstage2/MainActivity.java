@@ -1,14 +1,15 @@
 package com.example.android.popularmoviesstage2;
 
 import android.app.LoaderManager;
+import android.arch.lifecycle.Observer;
+import android.arch.lifecycle.ViewModelProviders;
 import android.content.Context;
-import android.content.CursorLoader;
 import android.content.Intent;
 import android.content.Loader;
-import android.database.Cursor;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
+import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.GridLayoutManager;
@@ -19,8 +20,8 @@ import android.view.View;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
-import com.example.android.popularmoviesstage2.data.FavoriteMovieContract.MovieEntry;
-import com.example.android.popularmoviesstage2.movie.Movie;
+import com.example.android.popularmoviesstage2.ViewModels.MainViewModel;
+import com.example.android.popularmoviesstage2.database.MovieEntry;
 import com.example.android.popularmoviesstage2.movie.MovieAdapter;
 import com.example.android.popularmoviesstage2.movie.MovieLoader;
 
@@ -34,6 +35,8 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Item
 
     private static final String SECTION_POPULAR = "popular";
     private static final String SECTION_TOP_RATED = "top_rated";
+    private static final String SECTION_FAVORITES = "favorites";
+    private static final String MOVIE_KEY = "movie";
     public final String REQUEST_URL = "http://api.themoviedb.org/3/movie/";
 
     @BindView(R.id.rv_list)
@@ -47,9 +50,8 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Item
     private String mSection = SECTION_POPULAR;
     private LoaderManager mLoaderManager;
     private static final int MOVIE_LOADER_ID = 101;
-    private static final int DATABASE_LOADER_ID = 102;
-    private List<Movie> mMovieList;
-    private Menu menu;
+    private List<MovieEntry> mMovieList;
+    private MainViewModel viewModel;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -76,20 +78,37 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Item
             // because this activity implements the LoaderCallbacks interface).
             mLoaderManager.initLoader(MOVIE_LOADER_ID, null, this);
         }
+
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putString("sort_by", mSection);
+        viewModel.setSection(mSection);
+    }
+
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        viewModel = ViewModelProviders.of(this).get(MainViewModel.class);
+        if (viewModel.getSection() == SECTION_FAVORITES) {
+            showFavorites(viewModel.getMovies().getValue());
+        }
     }
 
     @Override
     public void onItemClick(View view, int position) {
         Intent intent = new Intent(MainActivity.this, DetailsActivity.class);
-        Movie currentMovie = adapter.getItem(position);
-        intent.putExtra("movie", currentMovie);
+        MovieEntry currentMovie = adapter.getItem(position);
+        intent.putExtra(MOVIE_KEY, currentMovie);
         startActivity(intent);
     }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.sort_menu, menu);
-        this.menu = menu;
         return true;
     }
 
@@ -109,44 +128,43 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Item
                 return true;
 
             case R.id.action_order_by_favorites:
-                if (mLoaderManager.getLoader(DATABASE_LOADER_ID) == null)
-                    mLoaderManager.restartLoader(DATABASE_LOADER_ID, null, this);
-                else
-                    mLoaderManager.initLoader(DATABASE_LOADER_ID, null, this);
+                mSection = SECTION_FAVORITES;
+                setupFavorites();
                 return true;
         }
         return super.onOptionsItemSelected(item);
     }
 
+    private void showFavorites(List<MovieEntry> movieEntries) {
+        adapter.mMovieList.clear();
+        adapter.addAll(movieEntries);
+        recyclerView.setAdapter(adapter);
+    }
+
+    private void setupFavorites() {
+        viewModel = ViewModelProviders.of(this).get(MainViewModel.class);
+        viewModel.getMovies().observe(this, new Observer<List<MovieEntry>>() {
+            @Override
+            public void onChanged(@Nullable List<MovieEntry> movieEntries) {
+                showFavorites(movieEntries);
+            }
+        });
+    }
+
 
     @Override
     public Loader onCreateLoader(int loaderID, Bundle bundle) {
-        if (loaderID == MOVIE_LOADER_ID) {
-            // parse breaks apart the URI string that's passed into its parameter
-            Uri baseUri = Uri.parse(REQUEST_URL + mSection);
+        // parse breaks apart the URI string that's passed into its parameter
+        Uri baseUri = Uri.parse(REQUEST_URL + mSection);
 
-            // buildUpon prepares the baseUri that we just parsed so we can add query parameters to it
-            Uri.Builder uriBuilder = baseUri.buildUpon();
-            uriBuilder.appendQueryParameter("api_key", BuildConfig.ApiKey);
+        // buildUpon prepares the baseUri that we just parsed so we can add query parameters to it
+        Uri.Builder uriBuilder = baseUri.buildUpon();
+        uriBuilder.appendQueryParameter("api_key", BuildConfig.ApiKey);
 
+        if (mSection != SECTION_FAVORITES)
             return new MovieLoader(this, uriBuilder.toString());
-        } else {
-            String[] projection = {
-                    MovieEntry._ID,
-                    MovieEntry.COLUMN_MOVIE_ID,
-                    MovieEntry.COLUMN_MOVIE_POSTER,
-                    MovieEntry.COLUMN_MOVIE_PLOT,
-                    MovieEntry.COLUMN_MOVIE_DATE,
-                    MovieEntry.COLUMN_MOVIE_VOTE,
-                    MovieEntry.COLUMN_MOVIE_TITLE};
-
-            return new CursorLoader(this,
-                    MovieEntry.CONTENT_URI,
-                    projection,
-                    null,
-                    null,
-                    null);
-        }
+        else
+            return null;
     }
 
     @Override
@@ -155,8 +173,8 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Item
         progressBar.setVisibility(View.GONE);
 
         int loaderID = loader.getId();
-        if (loaderID == MOVIE_LOADER_ID) {
-            List<Movie> movieList = (List<Movie>) list;
+        if (loaderID == MOVIE_LOADER_ID && mSection != SECTION_FAVORITES) {
+            List<MovieEntry> movieList = (List<MovieEntry>) list;
 
             adapter.mMovieList.clear();
             if (movieList != null && movieList.size() > 0) {
@@ -167,24 +185,6 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Item
                 recyclerView.setAdapter(adapter);
                 emptyView.setVisibility(View.VISIBLE);
                 emptyView.setText(R.string.no_movies_found);
-            }
-        } else {
-            //Database Loader
-            Cursor cursor = (Cursor) list;
-            List<Movie> movieList = new ArrayList<>();
-            if(cursor.moveToFirst()){
-                movieList.add(getMovieFromCursor(cursor));
-            }
-
-            while (cursor.moveToNext()) {
-                movieList.add(getMovieFromCursor(cursor));
-            }
-            adapter.mMovieList.clear();
-            adapter.addAll(movieList);
-            recyclerView.setAdapter(adapter);
-            if(movieList.size() == 0){
-                emptyView.setVisibility(View.VISIBLE);
-                emptyView.setText(R.string.no_favorites_found);
             }
         }
     }
@@ -203,21 +203,4 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Item
         return false;
     }
 
-    private Movie getMovieFromCursor(Cursor cursor){
-        int idColumnIndex = cursor.getColumnIndex(MovieEntry.COLUMN_MOVIE_ID);
-        int posterColumnIndex = cursor.getColumnIndex(MovieEntry.COLUMN_MOVIE_POSTER);
-        int plotColumnIndex = cursor.getColumnIndex(MovieEntry.COLUMN_MOVIE_PLOT);
-        int dateColumnIndex = cursor.getColumnIndex(MovieEntry.COLUMN_MOVIE_DATE);
-        int voteColumnIndex = cursor.getColumnIndex(MovieEntry.COLUMN_MOVIE_VOTE);
-        int titleColumnIndex = cursor.getColumnIndex(MovieEntry.COLUMN_MOVIE_TITLE);
-
-        String id = cursor.getString(idColumnIndex);
-        String poster = cursor.getString(posterColumnIndex);
-        String plot = cursor.getString(plotColumnIndex);
-        String date = cursor.getString(dateColumnIndex);
-        String vote = cursor.getString(voteColumnIndex);
-        String title = cursor.getString(titleColumnIndex);
-
-        return new Movie(id, title, date, vote, plot, poster);
-    }
 }

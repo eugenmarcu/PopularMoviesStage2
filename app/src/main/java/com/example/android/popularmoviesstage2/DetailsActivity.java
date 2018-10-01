@@ -1,10 +1,13 @@
 package com.example.android.popularmoviesstage2;
 
 import android.app.LoaderManager;
+import android.arch.lifecycle.Observer;
+import android.arch.lifecycle.ViewModelProviders;
 import android.content.Loader;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
+import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -16,8 +19,10 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
-import com.example.android.popularmoviesstage2.data.FavoriteUtils;
-import com.example.android.popularmoviesstage2.movie.Movie;
+import com.example.android.popularmoviesstage2.ViewModels.DetailsViewModel;
+import com.example.android.popularmoviesstage2.ViewModels.DetailsViewModelFactory;
+import com.example.android.popularmoviesstage2.database.AppDatabase;
+import com.example.android.popularmoviesstage2.database.MovieEntry;
 import com.example.android.popularmoviesstage2.review.Review;
 import com.example.android.popularmoviesstage2.review.ReviewAdapter;
 import com.example.android.popularmoviesstage2.review.ReviewLoader;
@@ -50,7 +55,7 @@ public class DetailsActivity extends AppCompatActivity implements LoaderManager.
     @BindView(R.id.trailer_empty_tv)
     TextView trailer_empty_tv;
 
-    private Movie currentMovie;
+    private MovieEntry currentMovie;
     private final String API_KEY = BuildConfig.ApiKey;
     private final String BASE_REQUEST_URL = "http://api.themoviedb.org/3/movie/";
     private final String REVIEWS_DIR = "/reviews?api_key=" + API_KEY;
@@ -62,6 +67,9 @@ public class DetailsActivity extends AppCompatActivity implements LoaderManager.
     private TrailerAdapter mTrailersAdapter;
     private RecyclerView reviewsRecyclerView;
     private RecyclerView trailersRecyclerView;
+    private boolean mIsFavorite;
+    private AppDatabase mDb;
+    private static final String MOVIE_KEY = "movie";
 
 
     @Override
@@ -72,14 +80,16 @@ public class DetailsActivity extends AppCompatActivity implements LoaderManager.
 
         Bundle bundle = getIntent().getExtras();
         if (bundle != null) {
-            currentMovie = bundle.getParcelable("movie");
+            currentMovie = bundle.getParcelable(MOVIE_KEY);
         }
+
+        mDb = AppDatabase.getInstance(getApplicationContext());
 
         titleTV.setText(currentMovie.getTitle());
         releaseDateTV.setText(currentMovie.getReleaseDate());
         averageVoteTV.setText(currentMovie.getVote() + "/10");
         plotTV.setText(currentMovie.getPlot());
-        Glide.with(this).load(currentMovie.getPosterUrl()).into(posterIV);
+        Glide.with(this).load(currentMovie.getPoster()).into(posterIV);
 
         reviewsRecyclerView = findViewById(R.id.reviews_list);
         RecyclerView.LayoutManager layoutManagerReviews = new LinearLayoutManager(reviewsRecyclerView.getContext());
@@ -101,35 +111,64 @@ public class DetailsActivity extends AppCompatActivity implements LoaderManager.
         mLoaderManager.initLoader(REVIEW_LOADER_ID, null, this);
         mLoaderManager.initLoader(TRAILER_LOADER_ID, null, this);
 
-        if (FavoriteUtils.isFavorite(DetailsActivity.this, currentMovie.getId())) {
+        DetailsViewModelFactory factory = new DetailsViewModelFactory(mDb, currentMovie.getId());
+        final DetailsViewModel viewModel = ViewModelProviders.of(this, factory).get(DetailsViewModel.class);
+        viewModel.getMovie().observe(this, new Observer<MovieEntry>() {
+            @Override
+            public void onChanged(@Nullable MovieEntry movieEntry) {
+                viewModel.getMovie().removeObserver(this);
+                if (movieEntry == null) {
+                    setFavoriteButton(false);
+                } else {
+                    setFavoriteButton(true);
+                }
+
+            }
+        });
+
+
+        favoriteBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (mIsFavorite) {
+                    AppExecutors.getInstance().diskIO().execute(new Runnable() {
+                        @Override
+                        public void run() {
+                            mDb.movieDao().deleteMovie(currentMovie.getId());
+                        }
+                    });
+                    Toast.makeText(DetailsActivity.this,"Removed from favorites",Toast.LENGTH_SHORT).show();
+                    Drawable drawable = getDrawable(R.drawable.ic_favorite_border_black_24dp);
+                    favoriteBtn.setImageDrawable(drawable);
+                } else {
+                    AppExecutors.getInstance().diskIO().execute(new Runnable() {
+                        @Override
+                        public void run() {
+                            mDb.movieDao().insertMovie(getMovieEntryFromCurrent());
+                        }
+                    });
+                    Toast.makeText(DetailsActivity.this,"Added to favorites",Toast.LENGTH_SHORT).show();
+                    Drawable drawable = getDrawable(R.drawable.ic_favorite_black_24dp);
+                    favoriteBtn.setImageDrawable(drawable);
+                }
+            }
+        });
+    }
+
+    private MovieEntry getMovieEntryFromCurrent() {
+        return new MovieEntry(currentMovie.getId(), currentMovie.getTitle(), currentMovie.getReleaseDate(), currentMovie.getVote(), currentMovie.getPlot(), currentMovie.getPoster());
+    }
+
+        private void setFavoriteButton(Boolean isFavorite) {
+        mIsFavorite = isFavorite;
+        if (isFavorite) {
             Drawable drawable = getDrawable(R.drawable.ic_favorite_black_24dp);
             favoriteBtn.setImageDrawable(drawable);
         } else {
             Drawable drawable = getDrawable(R.drawable.ic_favorite_border_black_24dp);
             favoriteBtn.setImageDrawable(drawable);
-        }
 
-        favoriteBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                if (FavoriteUtils.isFavorite(DetailsActivity.this, currentMovie.getId())) {
-                    Drawable drawable = getDrawable(R.drawable.ic_favorite_border_black_24dp);
-                    favoriteBtn.setImageDrawable(drawable);
-                    int count = FavoriteUtils.removeFavorite(DetailsActivity.this, currentMovie.getId());
-                    if (count > 0) {
-                        Toast.makeText(DetailsActivity.this, R.string.removed_favorites,
-                                Toast.LENGTH_SHORT).show();
-                    }
-                } else {
-                    Drawable drawable = getDrawable(R.drawable.ic_favorite_black_24dp);
-                    favoriteBtn.setImageDrawable(drawable);
-                    Uri uri = FavoriteUtils.addFavorite(DetailsActivity.this, currentMovie);
-                    if (uri != null)
-                        Toast.makeText(DetailsActivity.this, R.string.added_favorites,
-                                Toast.LENGTH_SHORT).show();
-                }
-            }
-        });
+        }
     }
 
     /**

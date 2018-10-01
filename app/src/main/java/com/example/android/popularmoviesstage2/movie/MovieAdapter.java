@@ -9,6 +9,7 @@ import android.widget.ImageView;
 
 import com.bumptech.glide.Glide;
 import com.example.android.popularmoviesstage2.R;
+import com.example.android.popularmoviesstage2.database.MovieEntry;
 
 import java.util.List;
 
@@ -17,17 +18,17 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.ViewHolder> 
     private LayoutInflater mInflater;
     private ItemClickListener mClickListener;
 
-    public List<Movie> mMovieList;
+    public List<MovieEntry> mMovieList;
     private Context mContext;
 
     // data is passed into the constructor
-    public MovieAdapter(Context context, List<Movie> movies) {
+    public MovieAdapter(Context context, List<MovieEntry> movies) {
         this.mInflater = LayoutInflater.from(context);
         this.mMovieList = movies;
         mContext = context;
     }
 
-    public void addAll(List<Movie> movies){
+    public void addAll(List<MovieEntry> movies){
         mMovieList.addAll(movies);
     }
 
@@ -41,9 +42,9 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.ViewHolder> 
     // binds the data to the textview in each cell
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
-        Movie currentMovie = mMovieList.get(position);
-        //holder.movieImageView.setImageResource(R.drawable.ff);
-        Glide.with(mContext).load(currentMovie.getPosterUrl()).into(holder.movieImageView);
+        MovieEntry currentMovie = mMovieList.get(position);
+
+        Glide.with(mContext).load(currentMovie.getPoster()).into(holder.movieImageView);
     }
 
     // total number of cells
@@ -70,7 +71,7 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.ViewHolder> 
     }
 
     // convenience method for getting data at click position
-    public Movie getItem(int id) {
+    public MovieEntry getItem(int id) {
         return mMovieList.get(id);
     }
 

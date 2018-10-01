@@ -22,10 +22,6 @@
         <activity android:name=".DetailsActivity"
             android:parentActivityName=".MainActivity"/>
 
-        <provider
-            android:name=".data.FavoriteMovieProvider"
-            android:authorities="com.example.android.popularmoviesstage2"
-            android:exported="false" />
     </application>
 
 </manifest>

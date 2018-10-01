@@ -3,7 +3,7 @@ package com.example.android.popularmoviesstage2;
 import android.text.TextUtils;
 import android.util.Log;
 
-import com.example.android.popularmoviesstage2.movie.Movie;
+import com.example.android.popularmoviesstage2.database.MovieEntry;
 import com.example.android.popularmoviesstage2.review.Review;
 import com.example.android.popularmoviesstage2.trailer.Trailer;
 
@@ -43,9 +43,9 @@ public final class QueryUtils {
     }
 
     /**
-     * Query the dataset and return a list of {@link Movie} objects.
+     * Query the dataset and return a list of {@link MovieEntry} objects.
      */
-    public static List<Movie> fetchMovieData(String requestUrl) {
+    public static List<MovieEntry> fetchMovieData(String requestUrl) {
         // Create URL object
         URL url = createUrl(requestUrl);
 
@@ -58,7 +58,7 @@ public final class QueryUtils {
         }
 
         // Extract relevant fields from the JSON response and create a list of {@link New}s
-        List<Movie> movies = extractMoviesFromJson(jsonResponse);
+        List<MovieEntry> movies = extractMoviesFromJson(jsonResponse);
 
         // Return the list of {@link Movie}
         return movies;
@@ -276,13 +276,13 @@ public final class QueryUtils {
     }
 
     /**
-     * Return a list of {@link Movie} objects that has been built up from
+     * Return a list of {@link MovieEntry} objects that has been built up from
      * parsing the given JSON response.
      */
     //extractFeatureFromJson returns List object movie
     //Before we proceed from extracting information from jsonResponse
     //This method parses JSON code
-    private static List<Movie> extractMoviesFromJson(String movieJSON) {
+    private static List<MovieEntry> extractMoviesFromJson(String movieJSON) {
         // If the JSON string is empty or null, then return early.
         //Before Extracting information from the jsonResponse we should check
         //if the  parameter is an empty string or null by calling TextUtils.isEmpty
@@ -297,7 +297,7 @@ public final class QueryUtils {
         }
 
         // Create an empty ArrayList that we can start adding Environment news to
-        List<Movie> movies = new ArrayList<>();
+        List<MovieEntry> movies = new ArrayList<>();
 
         // Try to parse the JSON response string. If there's a problem with the way the JSON
         // is formatted, a JSONException exception object will be thrown.
@@ -310,7 +310,7 @@ public final class QueryUtils {
             // a list of movies
             JSONArray results = baseJsonResponse.getJSONArray("results");
 
-            // For each Movie in the movieArray, create an {@link Movie} object
+            // For each Movie in the movieArray, create an {@link MovieEntry} object
             for (int i = 0; i < results.length(); i++) {
 
                 // Get a single news at position i within the list of environment news
@@ -333,11 +333,11 @@ public final class QueryUtils {
                 //Extract the value for the key called "path"
                 String posterUrl = IMAGES_URL + currentMovie.getString("poster_path");
 
-                // Create a new {@link Movie} object with the id, title, releaseDate, voteAvarage, plot, posterUrl
+                // Create a new {@link Movie} object with the id, title, releaseDate, voteAverage, plot, posterUrl
                 // from the JSON response.
-                Movie newMovie = new Movie(id, title, releaseDate, voteAverage, plot, posterUrl);
+                MovieEntry newMovie = new MovieEntry(id, title, releaseDate, voteAverage, plot, posterUrl);
 
-                // Add the new {@link Movie} to the list of movies.
+                // Add the new {@link MovieEntry} to the list of movies.
                 movies.add(newMovie);
             }
             //Check the documentation
